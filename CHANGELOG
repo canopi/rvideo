@@ -1,3 +1,7 @@
+v0.9.8
+
+* bug fix : report an error if duration encoding (with -t option) is lengthier than video duration
+
 v0.9.7
 
 * take into account ffmpeg -t (duration) option
