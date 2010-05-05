@@ -1,4 +1,8 @@
-v0.9.6 IN PROGRESS, TODO: need more documentation of changes here, coming later..
+v0.9.7
+
+* take into account ffmpeg -t (duration) option
+
+v0.9.6
 
 Major Enhancements:
 * Inspector#capture_frame behavior moved to new FrameCapturer class
