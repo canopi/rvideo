@@ -134,7 +134,6 @@ module RVideo
         final_command = @command
         RVideo.logger.info("\nExecuting Command: #{final_command}\n")
         @raw_result = ''
-        duration = 0
         previous_line = nil
         mutex = Mutex.new
         
@@ -143,7 +142,7 @@ module RVideo
           stderr.each("\r") do |line|
             if line != previous_line
               previous_line = line
-              new_progress, duration = parse_progress(line, duration)
+              new_progress = parse_progress(line)
                 mutex.synchronize do
                   @progress = new_progress
                 end
@@ -190,20 +189,16 @@ module RVideo
 
 private
       
-      def parse_progress(line, duration)
-        if line =~ /Duration: (\d{2}):(\d{2}):(\d{2}).(\d{1})/
-          duration = (($1.to_i * 60 + $2.to_i) * 60 + $3.to_i) * 10 + $4.to_i
-        end
-        
+      def parse_progress(line)
         if line =~ /time=(\d+).(\d+)/
           if not duration.nil? and duration != 0
-            p = ($1.to_i * 10 + $2.to_i) * 100 / duration
+            p = ($1.to_i * 10 + $2.to_i) * 100 / (duration / 100)
           else
             p = 0
           end
           p = 100 if p > 100
         end
-        return [(p || nil), duration]
+        return p || nil
       end
       
       # Turns the temp log file into a useful string, from which we can parse the 
