@@ -336,10 +336,20 @@ module RVideo
 
     context "when -t option is specified" do
       it "returns specified duration in millisecond" do
-        simple_avi_with_duration = "ffmpeg -i $input_file$ -t 20 -ar 44100 -ab 64 -vcodec xvid -acodec libmp3lame -r 29.97 $resolution$ -y $output_file$"
+        simple_avi_with_duration = "ffmpeg -i $input_file$ -t 1 -ar 44100 -ab 64 -vcodec xvid -acodec libmp3lame -r 29.97 $resolution$ -y $output_file$"
 
         @ffmpeg = RVideo::Tools::Ffmpeg.new(simple_avi_with_duration, @options)
-        @ffmpeg.duration.should == 20000
+        @ffmpeg.duration.should == 1000
+      end      
+    end
+
+    context "when specified duration (with -t) is lengthier than video duration" do
+      it "return video duration" do
+        simple_avi_with_duration = "ffmpeg -i $input_file$ -t 2000 -ar 44100 -ab 64 -vcodec xvid -acodec libmp3lame -r 29.97 $resolution$ -y $output_file$"
+        inspector = mock("Inspector", :duration => 10)
+        @ffmpeg = RVideo::Tools::Ffmpeg.new(simple_avi_with_duration, @options)
+        @ffmpeg.stub(:inspect_original).and_return(inspector)
+        @ffmpeg.duration.should == 10
       end      
     end
   end  

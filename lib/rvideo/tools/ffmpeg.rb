@@ -184,7 +184,16 @@ module RVideo
       end
 
       def duration
-        @duration ||= (@command =~ /-t (\d+)/ ? $1.to_i * 1000 : inspect_original.duration)
+        return @duration if @duration
+        
+        original_duration = inspect_original.duration
+        if @command =~ /-t (\d+)/
+          specified_duration = $1.to_i * 1000
+          @duration = (specified_duration <= original_duration ?
+                       specified_duration : original_duration)
+        else
+          @duration = original_duration
+        end
       end      
 
 private
