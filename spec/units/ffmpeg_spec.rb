@@ -320,4 +320,27 @@ module RVideo
       
     end
   end
+
+  describe "#duration" do
+    before :each do
+      setup_ffmpeg_spec
+    end
+    
+    context "when -t option is ommitted" do
+      it "returns original file duration" do
+        inspector = mock("Inspector", :duration => 10)
+        @ffmpeg.should_receive(:inspect_original).and_return(inspector)
+        @ffmpeg.duration.should == 10
+      end      
+    end
+
+    context "when -t option is specified" do
+      it "returns specified duration in millisecond" do
+        simple_avi_with_duration = "ffmpeg -i $input_file$ -t 20 -ar 44100 -ab 64 -vcodec xvid -acodec libmp3lame -r 29.97 $resolution$ -y $output_file$"
+
+        @ffmpeg = RVideo::Tools::Ffmpeg.new(simple_avi_with_duration, @options)
+        @ffmpeg.duration.should == 20000
+      end      
+    end
+  end  
 end

@@ -183,7 +183,11 @@ module RVideo
         Process.kill("SIGKILL", @pid)
         raise TranscoderError, "Transcoder hung."
       end
-      
+
+      def duration
+        @duration ||= (@command =~ /-t (\d+)/ ? $1.to_i * 1000 : inspect_original.duration)
+      end      
+
 private
       
       def parse_progress(line, duration)

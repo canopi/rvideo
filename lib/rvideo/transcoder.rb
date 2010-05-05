@@ -77,15 +77,15 @@ module RVideo # :nodoc:
       RVideo.logger.info("\nNew transcoder job\n================\nTask: #{task}\nOptions: #{options.inspect}")
       
       if block_given?
-        parse_and_execute(task, options) do |tool, progress|
+        tool = parse_and_execute(task, options) do |tool, progress|
           yield(tool, progress)
         end
       else
-        parse_and_execute(task, options)
+        tool = parse_and_execute(task, options)
       end
 
       @processed = Inspector.new(:file => options[:output_file])
-      result = check_integrity
+      result = check_integrity(tool)
       RVideo.logger.info("\nFinished task. Total errors: #{@errors.size}\n")
       @total_time = Time.now - t1
       result
@@ -105,11 +105,11 @@ module RVideo # :nodoc:
       end
     end
     
-    def check_integrity
+    def check_integrity(tool)
       precision = 1.1
       if @processed.invalid?
         @errors << "Output file invalid"
-      elsif (@processed.duration >= (original.duration * precision) or @processed.duration <= (original.duration / precision))
+      elsif (@processed.duration >= (tool.duration * precision) or @processed.duration <= (tool.duration / precision))
         @errors << "Original file has a duration of #{original.duration}, but processed file has a duration of #{@processed.duration}"
       end
       return @errors.size == 0
@@ -133,6 +133,7 @@ module RVideo # :nodoc:
         end
         
         executed_commands << tool
+        return tool
       end
     end
   end

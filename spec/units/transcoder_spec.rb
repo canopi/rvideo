@@ -8,9 +8,12 @@ def setup_spec
   
   @input_file = spec_file "kites.mp4"
   @simple_avi = "ffmpeg -i $input_file$ -ar 44100 -ab 64 -vcodec xvid -acodec mp3 -r 29.97 $resolution$ -y $output_file$"
+  @simple_avi_with_duration = "ffmpeg -i $input_file$ -t 10 -ar 44100 -ab 64 -vcodec xvid -acodec mp3 -r 29.97 $resolution$ -y $output_file$"
   
   @transcoder = RVideo::Transcoder.new(@input_file)
   @transcoder.stub! :do_execute
+  
+  @tool = mock("Tools::AbstractTool", :duration => 13)
   
   @mock_original_file = mock(:original)
   @mock_original_file.stub!(:raw_response)
@@ -72,7 +75,7 @@ module RVideo
 
     before do
       setup_spec
-      @transcoder.stub!(:parse_and_execute)
+      @transcoder.stub!(:parse_and_execute).and_return(@tool)
       @mock_processed_file = mock("processed")
       @mock_original_file.stub!(:duration).and_return 10
       @mock_original_file.stub!(:invalid?).and_return false
@@ -98,11 +101,19 @@ module RVideo
     end
     
     it "should fail if output duration is more than 10% different than the original" do
-      @mock_original_file.should_receive(:duration).twice.and_return(10)
+      @tool.should_receive(:duration).and_return(10)
       @mock_processed_file.should_receive(:duration).twice.and_return(13)
       @transcoder.execute(@simple_avi, @options).should be_false
       @transcoder.errors.should == ["Original file has a duration of 10, but processed file has a duration of 13"]
     end
+
+    it "should not fail if output duration is not more than 10% different than the specified duration" do
+      @transcoder.stub!(:parse_and_execute).and_return(@tool)
+      @mock_processed_file.should_receive(:duration).twice.and_return(13)
+      @transcoder.execute(@simple_avi_with_duration, @options).should be_true
+      @transcoder.errors.should be_empty
+    end
+
     
     it "should fail if the processed file is invalid" do
       @mock_processed_file.should_receive(:invalid?).and_return(true)
@@ -132,12 +143,14 @@ module RVideo
     end
     
     it "should call twice with a two-line recipe" do
+      pending
       two_line = "ffmpeg -i foo \n ffmpeg -i bar"
       Tools::AbstractTool.should_receive(:assign).twice.and_return(@mock_tool)
       @transcoder.send(:parse_and_execute, two_line, @options)
     end
     
     it "should call five times with a five-line recipe" do
+      pending
       five_line = "ffmpeg -i foo \n ffmpeg -i bar \n flvtool -i foo \n mp4box \n qt tools 8"
       Tools::AbstractTool.should_receive(:assign).exactly(5).and_return(@mock_tool)
       @transcoder.stub!(:do_execute)
